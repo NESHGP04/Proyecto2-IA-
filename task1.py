@@ -148,6 +148,115 @@ def backtracking_puro(grafo):
     return solucion, contador[0], tiempo
 
 
+# ─────────────────────────────────────────────
+# 4. BACKTRACKING OPTIMIZADO (MRV + FORWARD CHECKING)
+# ─────────────────────────────────────────────
+
+def seleccionar_variable_mrv(no_asignados, dominios):
+    """
+    Heurística MRV (Minimum Remaining Values) / Variable más restringida.
+    'Elija la variable que tenga el dominio más pequeño.'
+    Principio Fail-First: si va a fallar, falle temprano → más poda.
+    """
+    return min(no_asignados, key=lambda nodo: len(dominios[nodo]))
+
+
+def forward_checking(nodo, valor, grafo, dominios):
+    """
+    Lookahead (Forward Checking):
+    'Después de asignar Xi, elimine los valores inconsistentes
+     de los dominios de los vecinos de Xi.'
+    Devuelve los dominios actualizados y una lista de (vecino, valor_eliminado)
+    para poder hacer rollback si es necesario.
+    """
+    eliminados = []
+    for vecino in grafo.neighbors(nodo):
+        if valor in dominios[vecino]:
+            dominios[vecino].remove(valor)
+            eliminados.append((vecino, valor))
+    return eliminados
+
+
+def restaurar_dominios(eliminados, dominios):
+    """Revierte los cambios del forward checking al hacer backtrack."""
+    for (vecino, valor) in eliminados:
+        dominios[vecino].add(valor)
+
+
+def backtracking_optimizado(grafo):
+    """
+    Backtracking Search con:
+      - MRV: elegir la variable con menor dominio restante
+      - Forward Checking (Lookahead): eliminar valores inconsistentes
+        en vecinos después de cada asignación
+    
+    El algoritmo completo:
+      Backtrack(x, w, Domains):
+        Xi ← variable con menor |Domain_i|  (MRV)
+        Para cada v en Domain_i:
+          δ ← ∏ f_j(x ∪ {Xi:v}) para fj en D(x,Xi)
+          Si δ = 0 → continuar
+          Domains' ← Domains via LOOKAHEAD
+          Si cualquier Domains'_i está vacío → continuar
+          Backtrack(x ∪ {Xi:v}, w*δ, Domains')
+    """
+    nodos = list(grafo.nodes())
+    asignacion = {}
+    # Cada nodo empieza con su dominio completo (conjunto mutable)
+    dominios = {nodo: set(PROTOCOLOS) for nodo in nodos}
+    contador = [0]
+
+    def backtrack(no_asignados):
+        # Caso base: asignación completa
+        if not no_asignados:
+            return dict(asignacion)
+
+        # MRV: elegir variable con menor dominio restante
+        nodo = seleccionar_variable_mrv(no_asignados, dominios)
+        no_asignados_restantes = no_asignados - {nodo}
+
+        for protocolo in list(dominios[nodo]):
+            contador[0] += 1
+            asignacion[nodo] = protocolo
+
+            # δ = producto de factores dependientes (slide: D(x, Xi))
+            delta = 1
+            for vecino in grafo.neighbors(nodo):
+                if vecino in asignacion:
+                    delta *= factor(protocolo, asignacion[vecino])
+
+            if delta == 0:
+                del asignacion[nodo]
+                continue
+
+            # LOOKAHEAD: Forward Checking
+            # Eliminar el protocolo asignado de dominios de vecinos no asignados
+            eliminados = forward_checking(nodo, protocolo, grafo, dominios)
+
+            # Si algún dominio quedó vacío → fallo, continuar
+            dominio_vacio = any(
+                len(dominios[v]) == 0
+                for v in grafo.neighbors(nodo)
+                if v not in asignacion
+            )
+
+            if not dominio_vacio:
+                resultado = backtrack(no_asignados_restantes)
+                if resultado is not None:
+                    return resultado
+
+            # Rollback: restaurar dominios eliminados
+            restaurar_dominios(eliminados, dominios)
+            del asignacion[nodo]
+
+        return None   # backtrack
+
+    inicio = time.time()
+    solucion = backtrack(set(nodos))
+    tiempo = time.time() - inicio
+
+    return solucion, contador[0], tiempo
+
 
 # ─────────────────────────────────────────────
 # 5. VERIFICACIÓN DE SOLUCIÓN
