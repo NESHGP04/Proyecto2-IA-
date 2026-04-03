@@ -79,3 +79,15 @@ def resultado(estado, accion):
         nuevo.turno = "MAX"
 
     return nuevo
+
+#función para definir si el estado es terminal
+def es_terminal(estado, profundidad):
+    todos = set(estado.grafo.nodes())
+    ocupados = estado.max_nodes | estado.min_nodes
+    return profundidad == D_MAX or ocupados == todos
+
+#función para evaluar
+def evaluar(estado):
+    valor_max = sum(estado.valores[n] for n in estado.max_nodes)
+    valor_min = sum(estado.valores[n] for n in estado.min_nodes)
+    return valor_max - valor_min
