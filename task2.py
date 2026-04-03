@@ -11,6 +11,7 @@ TASK 2
 import random
 import time
 import networkx as nx
+import matplotlib.pyplot as plt
 
 #configuración con profundidad de bñusqueda 4
 SEED = 42
@@ -180,6 +181,38 @@ def inicializar_juego(G):
 
     return estado
 
+#función para visualizar grafo
+def visualizar_grafo_juego(G, estado):
+    pos = nx.spring_layout(G, seed=42)
+
+    colores = []
+    for nodo in G.nodes():
+        if nodo in estado.max_nodes:
+            colores.append("#2ecc71")  # verde (Defensa)
+        elif nodo in estado.min_nodes:
+            colores.append("#e74c3c")  # rojo (Hacker)
+        else:
+            colores.append("#bdc3c7")  # gris (libre)
+
+    etiquetas = {
+        n: f"{n}\n({estado.valores[n]})"
+        for n in G.nodes()
+    }
+
+    plt.figure(figsize=(10, 7))
+    nx.draw(
+        G,
+        pos,
+        with_labels=True,
+        labels=etiquetas,
+        node_color=colores,
+        node_size=800,
+        font_size=8
+    )
+
+    plt.title("Estado del Juego (Verde=Defensa, Rojo=Hacker)")
+    plt.show()
+
 #main
 if __name__ == "__main__":
     print("╔══════════════════════════════════════════════╗")
@@ -193,6 +226,8 @@ if __name__ == "__main__":
     print("Aristas:", G.number_of_edges())
 
     estado = inicializar_juego(G)
+
+    visualizar_grafo_juego(G, estado)
 
     print("\nValores de nodos:")
     for n, v in estado.valores.items():
