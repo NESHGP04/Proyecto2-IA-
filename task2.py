@@ -91,3 +91,142 @@ def evaluar(estado):
     valor_max = sum(estado.valores[n] for n in estado.max_nodes)
     valor_min = sum(estado.valores[n] for n in estado.min_nodes)
     return valor_max - valor_min
+
+#algoritmo minmax
+def minimax(estado, profundidad, contador):
+    contador[0] += 1
+
+    if es_terminal(estado, profundidad):
+        return evaluar(estado), None
+
+    if estado.turno == "MAX":
+        mejor_valor = float("-inf")
+        mejor_accion = None
+
+        for a in acciones(estado):
+            val, _ = minimax(resultado(estado, a), profundidad + 1, contador)
+
+            if val > mejor_valor:
+                mejor_valor = val
+                mejor_accion = a
+
+        return mejor_valor, mejor_accion
+
+    else:
+        mejor_valor = float("inf")
+        mejor_accion = None
+
+        for a in acciones(estado):
+            val, _ = minimax(resultado(estado, a), profundidad + 1, contador)
+
+            if val < mejor_valor:
+                mejor_valor = val
+                mejor_accion = a
+
+        return mejor_valor, mejor_accion
+
+#algoritmo alpha-beta
+def alphabeta(estado, profundidad, alpha, beta, contador):
+    contador[0] += 1
+
+    if es_terminal(estado, profundidad):
+        return evaluar(estado), None
+
+    if estado.turno == "MAX":
+        mejor_accion = None
+
+        for a in acciones(estado):
+            val, _ = alphabeta(resultado(estado, a), profundidad + 1, alpha, beta, contador)
+
+            if val > alpha:
+                alpha = val
+                mejor_accion = a
+
+            if alpha >= beta:
+                break
+
+        return alpha, mejor_accion
+
+    else:
+        mejor_accion = None
+
+        for a in acciones(estado):
+            val, _ = alphabeta(resultado(estado, a), profundidad + 1, alpha, beta, contador)
+
+            if val < beta:
+                beta = val
+                mejor_accion = a
+
+            if beta <= alpha:
+                break
+
+        return beta, mejor_accion
+    
+#función para inicializar el juego
+def inicializar_juego(G):
+    valores = {n: random.randint(1, 10) for n in G.nodes()}
+
+    nodos = list(G.nodes())
+    max_start = nodos[0]
+    min_start = nodos[1]
+
+    estado = Estado(
+        G,
+        valores,
+        max_nodes={max_start},
+        min_nodes={min_start},
+        turno="MAX"
+    )
+
+    return estado
+
+#main
+if __name__ == "__main__":
+    print("╔══════════════════════════════════════════════╗")
+    print("║   TASK 2 · Minimax vs Alpha-Beta            ║")
+    print("╚══════════════════════════════════════════════╝")
+
+    G = generar_grafo()
+
+    print("\nGrafo:")
+    print("Nodos:", G.number_of_nodes())
+    print("Aristas:", G.number_of_edges())
+
+    estado = inicializar_juego(G)
+
+    print("\nValores de nodos:")
+    for n, v in estado.valores.items():
+        print(f"{n}: {v}")
+
+    # ── MINIMAX ─────────────────────────────
+    contador_mm = [0]
+    t0 = time.time()
+    valor_mm, accion_mm = minimax(estado, 0, contador_mm)
+    t_mm = time.time() - t0
+
+    # ── ALPHA-BETA ─────────────────────────
+    contador_ab = [0]
+    t0 = time.time()
+    valor_ab, accion_ab = alphabeta(estado, 0, float("-inf"), float("inf"), contador_ab)
+    t_ab = time.time() - t0
+
+    # ── RESULTADOS ─────────────────────────
+    print("\n" + "="*50)
+    print("MINIMAX")
+    print("="*50)
+    print("Mejor acción:", accion_mm)
+    print("Valor:", valor_mm)
+    print("Nodos explorados:", contador_mm[0])
+    print("Tiempo:", f"{t_mm:.6f}s")
+
+    print("\n" + "="*50)
+    print("ALPHA-BETA")
+    print("="*50)
+    print("Mejor acción:", accion_ab)
+    print("Valor:", valor_ab)
+    print("Nodos explorados:", contador_ab[0])
+    print("Tiempo:", f"{t_ab:.6f}s")
+
+    if contador_mm[0] > 0:
+        reduccion = (1 - contador_ab[0] / contador_mm[0]) * 100
+        print("\nReducción de nodos:", f"{reduccion:.2f}%")
