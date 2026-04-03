@@ -32,3 +32,50 @@ def generar_grafo(n=NUM_NODOS, p=PROBABILIDAD_ARISTA, seed=SEED):
 
     mapeo = {i: f"S{i}" for i in range(n)}
     return nx.relabel_nodes(G, mapeo)
+
+#clase estado, con funciones para inciarlo y devolverlo
+class Estado:
+    def __init__(self, grafo, valores, max_nodes=None, min_nodes=None, turno="MAX"):
+        self.grafo = grafo
+        self.valores = valores
+        self.max_nodes = set(max_nodes or [])
+        self.min_nodes = set(min_nodes or [])
+        self.turno = turno
+
+    def copia(self):
+        return Estado(
+            self.grafo,
+            self.valores,
+            self.max_nodes.copy(),
+            self.min_nodes.copy(),
+            self.turno
+        )
+    
+#función para realizar acciones
+def acciones(estado):
+    if estado.turno == "MAX":
+        controlados = estado.max_nodes
+    else:
+        controlados = estado.min_nodes
+
+    posibles = set()
+
+    for nodo in controlados:
+        for vecino in estado.grafo.neighbors(nodo):
+            if vecino not in estado.max_nodes and vecino not in estado.min_nodes:
+                posibles.add(vecino)
+
+    return list(posibles)
+
+#función para realizar transiciones
+def resultado(estado, accion):
+    nuevo = estado.copia()
+
+    if estado.turno == "MAX":
+        nuevo.max_nodes.add(accion)
+        nuevo.turno = "MIN"
+    else:
+        nuevo.min_nodes.add(accion)
+        nuevo.turno = "MAX"
+
+    return nuevo
