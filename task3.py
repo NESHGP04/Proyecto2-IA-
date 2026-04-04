@@ -36,7 +36,7 @@ def expectiminimax(estado, profundidad, contador):
 
         return mejor_valor, mejor_accion
 
-    else:  # MIN
+    else:
         mejor_valor = float("inf")
         mejor_accion = None
 
@@ -51,16 +51,16 @@ def expectiminimax(estado, profundidad, contador):
     
 #nodo de azar
 def nodo_azar(estado, accion, profundidad, contador):
-    # ── ÉXITO (80%)
+    #exito - 80%
     estado_exito = resultado(estado, accion)
     val_exito, _ = expectiminimax(estado_exito, profundidad + 1, contador)
 
-    # ── FALLO (20%)
+    #fallo - 20%
     estado_fallo = estado.copia()
     estado_fallo.turno = "MIN" if estado.turno == "MAX" else "MAX"
     val_fallo, _ = expectiminimax(estado_fallo, profundidad + 1, contador)
 
-    # Valor esperado
+    #valor esperado
     return PROB_EXITO * val_exito + PROB_FALLO * val_fallo
 
 #agentes
@@ -87,7 +87,6 @@ def jugar_partida(estado, agente_max, agente_min, pasos=15):
         if accion is None:
             break
 
-        # ── PROBABILIDAD DE FALLO
         if random.random() < PROB_EXITO:
             estado_actual = resultado(estado_actual, accion)
         else:
@@ -103,12 +102,12 @@ def experimento(estado, N=20):
     resultados_mm = []
     resultados_exp = []
 
-    # ── Minimax vs Random
+    #minimax vs Random
     for _ in range(N):
         val = jugar_partida(estado, agente_minimax, agente_random)
         resultados_mm.append(val)
 
-    # ── Expectiminimax vs Random
+    #expectiminimax vs Random
     for _ in range(N):
         val = jugar_partida(estado, agente_expecti, agente_random)
         resultados_exp.append(val)
@@ -119,4 +118,33 @@ def experimento(estado, N=20):
 
     print("Minimax vs Random:", sum(resultados_mm)/N)
     print("Expectiminimax vs Random:", sum(resultados_exp)/N)
+
+#main
+if __name__ == "__main__":
+    print("╔══════════════════════════════════════════════╗")
+    print("║   TASK 3 · Expectiminimax + Incertidumbre   ║")
+    print("╚══════════════════════════════════════════════╝")
+
+    G = generar_grafo()
+
+    estado = inicializar_juego(G)
+
+    print("\nValores de nodos:")
+    for n, v in estado.valores.items():
+        print(f"{n}: {v}")
+
+    contador = [0]
+    t0 = time.time()
+    valor, accion = expectiminimax(estado, 0, contador)
+    t = time.time() - t0
+
+    print("\n" + "="*50)
+    print("EXPECTIMINIMAX")
+    print("="*50)
+    print("Mejor acción:", accion)
+    print("Valor esperado:", valor)
+    print("Nodos explorados:", contador[0])
+    print("Tiempo:", f"{t:.6f}s")
+
+    experimento(estado, N=20)
 
