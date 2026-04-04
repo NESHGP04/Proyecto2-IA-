@@ -74,3 +74,49 @@ def agente_minimax(estado):
 def agente_expecti(estado):
     return expectiminimax(estado, 0, [0])[1]
 
+#simulación de la partida
+def jugar_partida(estado, agente_max, agente_min, pasos=15):
+    estado_actual = estado.copia()
+
+    for _ in range(pasos):
+        if estado_actual.turno == "MAX":
+            accion = agente_max(estado_actual)
+        else:
+            accion = agente_min(estado_actual)
+
+        if accion is None:
+            break
+
+        # ── PROBABILIDAD DE FALLO
+        if random.random() < PROB_EXITO:
+            estado_actual = resultado(estado_actual, accion)
+        else:
+            # pierde turno
+            estado_actual.turno = "MIN" if estado_actual.turno == "MAX" else "MAX"
+
+    return evaluar(estado_actual)
+
+#función de los experimentos para correr con minmax y con expectiminmax
+def experimento(estado, N=20):
+    print("\nEjecutando experimentos...")
+
+    resultados_mm = []
+    resultados_exp = []
+
+    # ── Minimax vs Random
+    for _ in range(N):
+        val = jugar_partida(estado, agente_minimax, agente_random)
+        resultados_mm.append(val)
+
+    # ── Expectiminimax vs Random
+    for _ in range(N):
+        val = jugar_partida(estado, agente_expecti, agente_random)
+        resultados_exp.append(val)
+
+    print("\n" + "="*50)
+    print("RESULTADOS PROMEDIO")
+    print("="*50)
+
+    print("Minimax vs Random:", sum(resultados_mm)/N)
+    print("Expectiminimax vs Random:", sum(resultados_exp)/N)
+
