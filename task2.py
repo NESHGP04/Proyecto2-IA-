@@ -233,19 +233,19 @@ if __name__ == "__main__":
     for n, v in estado.valores.items():
         print(f"{n}: {v}")
 
-    # ── MINIMAX ─────────────────────────────
+    #minmax
     contador_mm = [0]
     t0 = time.time()
     valor_mm, accion_mm = minimax(estado, 0, contador_mm)
     t_mm = time.time() - t0
 
-    # ── ALPHA-BETA ─────────────────────────
+    #alpha-beta
     contador_ab = [0]
     t0 = time.time()
     valor_ab, accion_ab = alphabeta(estado, 0, float("-inf"), float("inf"), contador_ab)
     t_ab = time.time() - t0
 
-    # ── RESULTADOS ─────────────────────────
+    #resultados
     print("\n" + "="*50)
     print("MINIMAX")
     print("="*50)
