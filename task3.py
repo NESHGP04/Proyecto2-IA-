@@ -133,6 +133,19 @@ if __name__ == "__main__":
     for n, v in estado.valores.items():
         print(f"{n}: {v}")
 
+    contador_mm = [0]
+    t0 = time.time()
+    valor_mm, accion_mm = minimax(estado, 0, contador_mm)
+    t_mm = time.time() - t0
+
+    print("\n" + "="*50)
+    print("MINIMAX (sin incertidumbre)")
+    print("="*50)
+    print("Mejor acción:", accion_mm)
+    print("Valor:", valor_mm)
+    print("Nodos explorados:", contador_mm[0])
+    print("Tiempo:", f"{t_mm:.6f}s")
+
     contador = [0]
     t0 = time.time()
     valor, accion = expectiminimax(estado, 0, contador)
